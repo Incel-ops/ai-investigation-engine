@@ -12,3 +12,4 @@ pypdf
 python-docx
 pydantic
 requests
+py-rust-stemmers==0.1.8
