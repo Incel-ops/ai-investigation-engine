@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+fastembed
+google-genai
+llama-index-core
+llama-index-embeddings-fastembed
+llama-index-vector-stores-qdrant
+qdrant-client
+python-dotenv
+python-multipart
+pypdf
+python-docx
+pydantic
+requests

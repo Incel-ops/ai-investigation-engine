@@ -1,0 +1,190 @@
+import json
+import logging
+import os
+import re
+import time
+
+import qdrant_client
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types
+from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.fastembed import FastEmbedEmbedding
+from llama_index.vector_stores.qdrant import QdrantVectorStore
+from pydantic import BaseModel
+
+from search import custom_hybrid_reranker
+
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("investigation_engine")
+
+# მოდელების სია (თუ პირველი გადატვირთულია, სცდის შემდეგს)
+GEMINI_MODELS = [
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
+]
+EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+COLLECTION_NAME = "investigation_engine"
+TOP_K_RETRIEVE = 15
+TOP_N_RERANK = 3
+LLM_TIMEOUT_MS = 60_000
+GEMINI_ATTEMPTS = 4
+MAX_SUBQUESTIONS = 4
+
+
+def require_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"გარემოს ცვლადი არ არის დაყენებული: {name}")
+    return value
+
+
+app = FastAPI(title="AI Investigation Engine")
+
+# 1. ლოკალური უფასო ემბედინგები
+Settings.embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL)
+
+# 2. Google Gemini კლიენტი
+gemini_client = genai.Client(
+    api_key=require_env("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
+)
+
+# 3. Qdrant კლიენტი
+qdrant = qdrant_client.QdrantClient(
+    url=require_env("QDRANT_URL"),
+    api_key=require_env("QDRANT_API_KEY"),
+)
+vector_store = QdrantVectorStore(client=qdrant, collection_name=COLLECTION_NAME)
+index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
+retriever = index.as_retriever(similarity_top_k=TOP_K_RETRIEVE)
+
+
+class QueryRequest(BaseModel):
+    query: str
+
+
+def call_gemini_with_retry(prompt: str):
+    last_exc = None
+    for model_name in GEMINI_MODELS:
+        for attempt in range(1, GEMINI_ATTEMPTS + 1):
+            try:
+                return gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
+            except genai_errors.ServerError as e:
+                last_exc = e
+                logger.warning("[%s] 503 Unavailable, retry %d/%d", model_name, attempt, GEMINI_ATTEMPTS)
+                time.sleep(3 * attempt)
+            except genai_errors.ClientError as e:
+                last_exc = e
+                if e.code == 429:
+                    msg = str(e)
+                    # თუ დღიური ლიმიტია ამოწურული (PerDay), გადავდივართ შემდეგ მოდელზე
+                    if "PerDay" in msg or "per day" in msg.lower():
+                        logger.warning("[%s] Daily quota exhausted, switching model...", model_name)
+                        break
+                    
+                    # თუ წუთობრივი ლიმიტია (PerMinute), ვკითხულობთ რამდენი წამი უნდა მოვიცადოთ
+                    match = re.search(r"retry in (\d+(\.\d+)?)s", msg)
+                    wait_sec = float(match.group(1)) + 2.0 if match else 15.0
+                    logger.warning("[%s] 429 Rate limit hit. Waiting %.1fs (attempt %d/%d)...", model_name, wait_sec, attempt, GEMINI_ATTEMPTS)
+                    time.sleep(wait_sec)
+                else:
+                    raise
+    raise last_exc or RuntimeError("All Gemini attempts failed")
+
+
+def decompose_query(query: str) -> list[str]:
+    """კითხვას ყოფს ქვე-კითხვებად. ერთ ნაბიჯიანი კითხვისთვის აბრუნებს თავად კითხვას."""
+    prompt = (
+        "Break the following question into the minimum number of simple sub-questions "
+        "that must each be answered by looking up a single fact. "
+        "Each sub-question must contain the full name of the entity it is about, "
+        "plus one descriptive word (such as 'film director', 'politician', or 'band') "
+        "so that it can be matched against an encyclopedia entry. "
+        "Example: 'What is the nationality of Ed Wood?' becomes "
+        "'Ed Wood American film director nationality'. "
+        f"Return at most {MAX_SUBQUESTIONS} sub-questions. "
+        "If the question is already simple, return it unchanged as the only item. "
+        "Respond ONLY with a JSON array of strings, no other text.\n\n"
+        f"Question: {query}"
+    )
+    try:
+        response = call_gemini_with_retry(prompt)
+        text = (response.text or "").strip().removeprefix("```json").removesuffix("```").strip()
+        parts = json.loads(text)
+        if isinstance(parts, list) and parts and all(isinstance(p, str) for p in parts):
+            return parts[:MAX_SUBQUESTIONS]
+    except Exception:
+        logger.exception("Query decomposition failed, using original query")
+    return [query]
+
+
+def retrieve_for_queries(queries: list[str]) -> list[dict]:
+    """ყველა ქვე-კითხვისთვის ცალ-ცალკე ძიება და შედეგების გაერთიანება (დუბლიკატების გარეშე)."""
+    seen_keys = set()
+    combined = []
+    for q in queries:
+        nodes = retriever.retrieve(q)
+        best = custom_hybrid_reranker(q, nodes, top_n=TOP_N_RERANK)
+        for res in best:
+            key = res["metadata"].get("title") or res["text"][:80]
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            combined.append(res)
+    return combined
+
+
+def build_prompt(query: str, sub_queries: list[str], results: list[dict]) -> str:
+    context_lines = []
+    for i, res in enumerate(results, 1):
+        title = res["metadata"].get("title", "unknown")
+        context_lines.append(f"[{i}] (Title: {title})\n{res['text']}")
+    context_text = "\n\n".join(context_lines)
+
+    sub_text = "\n".join(f"- {q}" for q in sub_queries)
+    return (
+        "You are an AI Investigation Engine. Answer the query accurately based only on "
+        "the provided sources.\n"
+        "Rules:\n"
+        "- If the sources do not contain the answer for a part of the question, say so "
+        "clearly instead of guessing.\n"
+        "- If sources contradict each other, point this out.\n"
+        "- After each claim, cite the source number in brackets, for example [2].\n\n"
+        f"Original question: {query}\n"
+        f"Sub-questions used for retrieval:\n{sub_text}\n\n"
+        f"Sources:\n{context_text}\n"
+    )
+
+
+@app.post("/investigate")
+def investigate(req: QueryRequest):
+    query = req.query.strip()
+    if not query:
+        raise HTTPException(status_code=422, detail="Query cannot be empty")
+
+    sub_queries = decompose_query(query)
+    results = retrieve_for_queries(sub_queries)
+
+    try:
+        response = call_gemini_with_retry(build_prompt(query, sub_queries, results))
+    except Exception:
+        logger.exception("Gemini request failed")
+        raise HTTPException(status_code=502, detail="LLM request failed")
+
+    return {
+        "query": query,
+        "sub_queries": sub_queries,
+        "answer": response.text or "",
+        "sources": [
+            {"index": i, "title": r["metadata"].get("title"), "text": r["text"][:300]}
+            for i, r in enumerate(results, 1)
+        ],
+    }

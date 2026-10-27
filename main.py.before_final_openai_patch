@@ -1,0 +1,161 @@
+import json
+import logging
+import os
+import re
+import time
+
+import qdrant_client
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from openai import OpenAI
+from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.fastembed import FastEmbedEmbedding
+from llama_index.vector_stores.qdrant import QdrantVectorStore
+from pydantic import BaseModel
+
+from search import custom_hybrid_reranker
+
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("investigation_engine")
+
+# მოდელების სია (თუ პირველი გადატვირთულია, სცდის შემდეგს)
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5-mini")
+EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+COLLECTION_NAME = "investigation_engine"
+TOP_K_RETRIEVE = 15
+TOP_N_RERANK = 3
+LLM_TIMEOUT_MS = 60.0
+GEMINI_ATTEMPTS = 4
+MAX_SUBQUESTIONS = 4
+
+
+def require_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"გარემოს ცვლადი არ არის დაყენებული: {name}")
+    return value
+
+
+app = FastAPI(title="AI Investigation Engine")
+
+# 1. ლოკალური უფასო ემბედინგები
+Settings.embed_model = FastEmbedEmbedding(model_name=EMBED_MODEL)
+
+openai_client = OpenAI(
+    api_key=require_env("OPENAI_API_KEY"),
+    timeout=LLM_TIMEOUT_SECONDS,
+    max_retries=1,
+)
+
+# 3. Qdrant კლიენტი
+qdrant = qdrant_client.QdrantClient(
+    url=require_env("QDRANT_URL"),
+    api_key=require_env("QDRANT_API_KEY"),
+)
+vector_store = QdrantVectorStore(client=qdrant, collection_name=COLLECTION_NAME)
+index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
+retriever = index.as_retriever(similarity_top_k=TOP_K_RETRIEVE)
+
+
+class QueryRequest(BaseModel):
+    query: str
+
+
+def call_llm(prompt: str) -> str:
+    response = openai_client.responses.create(
+        model=OPENAI_MODEL,
+        input=prompt,
+    )
+    return response.output_text or ""
+
+
+def decompose_query(query: str) -> list[str]:
+    """კითხვას ყოფს ქვე-კითხვებად. ერთ ნაბიჯიანი კითხვისთვის აბრუნებს თავად კითხვას."""
+    prompt = (
+        "Break the following question into the minimum number of simple sub-questions "
+        "that must each be answered by looking up a single fact. "
+        "Each sub-question must contain the full name of the entity it is about, "
+        "plus one descriptive word (such as 'film director', 'politician', or 'band') "
+        "so that it can be matched against an encyclopedia entry. "
+        "Example: 'What is the nationality of Ed Wood?' becomes "
+        "'Ed Wood American film director nationality'. "
+        f"Return at most {MAX_SUBQUESTIONS} sub-questions. "
+        "If the question is already simple, return it unchanged as the only item. "
+        "Respond ONLY with a JSON array of strings, no other text.\n\n"
+        f"Question: {query}"
+    )
+    try:
+        response = call_gemini_with_retry(prompt)
+        text = (response.text or "").strip().removeprefix("```json").removesuffix("```").strip()
+        parts = json.loads(text)
+        if isinstance(parts, list) and parts and all(isinstance(p, str) for p in parts):
+            return parts[:MAX_SUBQUESTIONS]
+    except Exception:
+        logger.exception("Query decomposition failed, using original query")
+    return [query]
+
+
+def retrieve_for_queries(queries: list[str]) -> list[dict]:
+    """ყველა ქვე-კითხვისთვის ცალ-ცალკე ძიება და შედეგების გაერთიანება (დუბლიკატების გარეშე)."""
+    seen_keys = set()
+    combined = []
+    for q in queries:
+        nodes = retriever.retrieve(q)
+        best = custom_hybrid_reranker(q, nodes, top_n=TOP_N_RERANK)
+        for res in best:
+            key = res["metadata"].get("title") or res["text"][:80]
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            combined.append(res)
+    return combined
+
+
+def build_prompt(query: str, sub_queries: list[str], results: list[dict]) -> str:
+    context_lines = []
+    for i, res in enumerate(results, 1):
+        title = res["metadata"].get("title", "unknown")
+        context_lines.append(f"[{i}] (Title: {title})\n{res['text']}")
+    context_text = "\n\n".join(context_lines)
+
+    sub_text = "\n".join(f"- {q}" for q in sub_queries)
+    return (
+        "You are an AI Investigation Engine. Answer the query accurately based only on "
+        "the provided sources.\n"
+        "Rules:\n"
+        "- If the sources do not contain the answer for a part of the question, say so "
+        "clearly instead of guessing.\n"
+        "- If sources contradict each other, point this out.\n"
+        "- After each claim, cite the source number in brackets, for example [2].\n\n"
+        f"Original question: {query}\n"
+        f"Sub-questions used for retrieval:\n{sub_text}\n\n"
+        f"Sources:\n{context_text}\n"
+    )
+
+
+@app.post("/investigate")
+def investigate(req: QueryRequest):
+    query = req.query.strip()
+    if not query:
+        raise HTTPException(status_code=422, detail="Query cannot be empty")
+
+    sub_queries = decompose_query(query)
+    results = retrieve_for_queries(sub_queries)
+
+    try:
+        response = call_gemini_with_retry(build_prompt(query, sub_queries, results))
+    except Exception:
+        logger.exception("Gemini request failed")
+        raise HTTPException(status_code=502, detail="LLM request failed")
+
+    return {
+        "query": query,
+        "sub_queries": sub_queries,
+        "answer": response.text or "",
+        "sources": [
+            {"index": i, "title": r["metadata"].get("title"), "text": r["text"][:300]}
+            for i, r in enumerate(results, 1)
+        ],
+    }

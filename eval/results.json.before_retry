@@ -1,0 +1,352 @@
+[
+  {
+    "id": "5a8460435542992ef85e23d1",
+    "error": "HTTPConnectionPool(host='localhost', port=8000): Read timed out. (read timeout=120)"
+  },
+  {
+    "id": "5a731dee5542992359bc3238",
+    "type": "bridge",
+    "level": "easy",
+    "question": "What man, also known as mi Sde-Or, created a military self-defense system developed for the Israel Defense Forces?",
+    "gold_answer": "Emrich \"Imi\" Lichtenfeld",
+    "gold_titles": [
+      "Imi Lichtenfeld",
+      "Krav Maga"
+    ],
+    "system_answer": "The man also known as **Imi Sde-Or** is **Imi Lichtenfeld** (born Emrich Lichtenfeld), a Hungarian-born Israeli martial artist [1]. He created the military self-defense system known as **Krav Maga** [1][2].\n\nLichtenfeld developed Krav Maga for the Israel Defense Forces (IDF) and Israeli security forces (including Shin Bet and Mossad) [2]. The system was derived from his training as a boxer and wrestler, as well as his practical street-fighting experience defending the Jewish quarter against fascist groups in Bratislava during the late 1930s [2]. Following his migration to Israel, he began providing combat training in the late 1940s to the forces that would eventually become the IDF [2]. The name \"Imi Sde-Or\" is the Hebrew calque of his original surname, Lichtenfeld [1].",
+    "retrieved_titles": [
+      "Imi Lichtenfeld",
+      "Krav Maga",
+      "Bruce Lee",
+      "Tommy Chang (martial artist)"
+    ],
+    "answer_correct": false,
+    "recall_at_3": 1.0,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5a76a401554299373536012b",
+    "type": "bridge",
+    "level": "easy",
+    "question": "New Faces of 1952 is a musical revue with songs and comedy skits, it helped jump start the career of which young performer, and American actress?",
+    "gold_answer": "Carol Lawrence",
+    "gold_titles": [
+      "Carol Lawrence",
+      "New Faces of 1952"
+    ],
+    "system_answer": "The musical revue *New Faces of 1952* helped jump start the careers of several young performers and American actresses, including:\n\n*   **Eartha Kitt** [1]\n*   **Alice Ghostley** [1]\n*   **Carol Lawrence** [1]\n\nOther performers and writers whose careers were jump-started by the production include **Paul Lynde**, **Robert Clary**, **Ronny Graham**, **Mel Brooks** (credited as Melvin Brooks), and lyricist **Sheldon Harnick** [1]. The sources also note that **June Carroll** performed in the revue, singing the song \"Guess Who I Saw Today\" [3].",
+    "retrieved_titles": [
+      "New Faces of 1952",
+      "New Faces (film)",
+      "Guess Who I Saw Today"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 0.5,
+    "recall_at_6": 0.5,
+    "mrr": 1.0,
+    "citation_accuracy": 0.5
+  },
+  {
+    "id": "5a7528e75542996c70cfaea0",
+    "type": "bridge",
+    "level": "easy",
+    "question": "1979, is a song by American alternative rock band, the Smashing Pumpkins, the second single from their third studio album, was released on October 23, 1995 in the UK, is titled?",
+    "gold_answer": "Mellon Collie and the Infinite Sadness",
+    "gold_titles": [
+      "1979 (song)",
+      "Mellon Collie and the Infinite Sadness"
+    ],
+    "system_answer": "The song described is titled **\"1979\"** [2].\n\nBased on the provided sources:\n*   **Song Title:** \"1979\" is a song by the Smashing Pumpkins and served as the second single from their third studio album [2].\n*   **Album Title:** The third studio album is titled ***Mellon Collie and the Infinite Sadness*** [1][2].\n*   **Release Date Discrepancy:** There is a discrepancy regarding the date mentioned in the query. Source [1] states that the **album** *Mellon Collie and the Infinite Sadness* was released on October 23, 1995, in the United Kingdom. However, Source [2] states the **song** \"1979\" was released in 1996 [1][2].",
+    "retrieved_titles": [
+      "Mellon Collie and the Infinite Sadness",
+      "1979 (song)",
+      "The Smashing Pumpkins discography"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 1.0,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5ab413e55542996a3a969f1b",
+    "type": "bridge",
+    "level": "easy",
+    "question": "Spaceballs is a 1987 American comic science fiction film co-written, produced and directed by Mel Brooks, the film also features which American actor, businessman, and animal welfare advocate, best known for his role as patriarch Tom Bradford on the ABC television comedy-drama \"Eight Is Enough\"?",
+    "gold_answer": "Richard Vincent Van Patten",
+    "gold_titles": [
+      "Dick Van Patten",
+      "Spaceballs"
+    ],
+    "system_answer": "The American actor, businessman, and animal welfare advocate featured in *Spaceballs* is **Dick Van Patten** [1][4]. He is best known for his role as patriarch Tom Bradford on the ABC television comedy-drama \"Eight Is Enough\" [1]. He appeared in the 1987 Mel Brooks film alongside stars such as Bill Pullman, John Candy, and Rick Moranis [4].",
+    "retrieved_titles": [
+      "Dick Van Patten",
+      "Tom Burke (actor)",
+      "Mark Williams (actor)",
+      "Spaceballs",
+      "Robert Prescott (actor)"
+    ],
+    "answer_correct": false,
+    "recall_at_3": 0.5,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5a73035d5542992359bc31fd",
+    "type": "bridge",
+    "level": "easy",
+    "question": "Formally the Games of the XXX Olympiad what sports event did Dirkie Chamberlain represent her country?",
+    "gold_answer": "2012 Summer Olympics",
+    "gold_titles": [
+      "2012 Summer Olympics",
+      "Dirkie Chamberlain"
+    ],
+    "system_answer": "At the Games of the XXX Olympiad, which was the 2012 Summer Olympics [4], Dirkie Chamberlain represented **South Africa** in **field hockey** [1]. Specifically, she competed in the women's tournament as a member of the South Africa women's national field hockey team [1].",
+    "retrieved_titles": [
+      "Dirkie Chamberlain",
+      "Mark Ralph",
+      "Antoine Roussel",
+      "2012 Summer Olympics",
+      "1996 Summer Olympics"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 0.5,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5adf1bf75542993344016bd9",
+    "type": "bridge",
+    "level": "easy",
+    "question": "Canton Road Station was a planned railway station on the Kowloon Southern Link of West Rail Line, that was to run beneath a large shopping mall located where?",
+    "gold_answer": "Tsim Sha Tsui, Hong Kong",
+    "gold_titles": [
+      "Canton Road Station",
+      "Harbour City (Hong Kong)"
+    ],
+    "system_answer": "Canton Road Station was a planned railway station intended to run beneath the **Harbour City** shopping mall [1].\n\nHarbour City is located in **Tsim Sha Tsui, Hong Kong** [1][3]. The shopping mall complex is situated along the west side of **Canton Road**, stretching from the **Star Ferry Pier** in the south to **China Hong Kong City** in the north [3].",
+    "retrieved_titles": [
+      "Canton Road Station",
+      "Old Trafford tram stop",
+      "Harbour City (Hong Kong)",
+      "Waterworks Mall",
+      "Elmvale Acres Shopping Centre"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 1.0,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5a7f8a535542994857a76778",
+    "type": "bridge",
+    "level": "hard",
+    "question": "The Pineground Bridge formerly carried Depot Road over the Suncook River into a town with a population of what?",
+    "gold_answer": "2,523",
+    "gold_titles": [
+      "Chichester, New Hampshire",
+      "Pineground Bridge"
+    ],
+    "system_answer": "The Pineground Bridge (also known as the Depot Road Bridge) formerly carried Depot Road over the Suncook River in the town of **Chichester, New Hampshire** [2]. According to the 2010 census, the population of Chichester was **2,523** [4].",
+    "retrieved_titles": [
+      "Creamery Covered Bridge",
+      "Pineground Bridge",
+      "Sunday River Bridge",
+      "Chichester, New Hampshire",
+      "Worth, West Sussex",
+      "Widnes"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 0.5,
+    "recall_at_6": 1.0,
+    "mrr": 0.5,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5ae3dde35542992f92d823a4",
+    "type": "bridge",
+    "level": "hard",
+    "question": " Benjamin Halfpenny was a footballer for a club that plays its home matches where?",
+    "gold_answer": "Select Security Stadium",
+    "gold_titles": [
+      "Ben Halfpenny",
+      "Widnes Vikings"
+    ],
+    "system_answer": "Benjamin Halfpenny played for the clubs **Widnes**, **St. Helens**, and **Warrington** [1].\n\nThe provided sources do not contain information regarding where these specific clubs play their home matches. While other sources describe the home grounds for Juventus (Allianz Stadium in Turin) and Manchester United (Old Trafford), they do not mention Benjamin Halfpenny or his associated clubs [2, 3].",
+    "retrieved_titles": [
+      "Ben Halfpenny",
+      "Juventus F.C.",
+      "Manchester United F.C."
+    ],
+    "answer_correct": false,
+    "recall_at_3": 0.5,
+    "recall_at_6": 0.5,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5ade69a4554299728e26c718",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5addfe6c5542997dc790710e",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ac1f7f355429964131be2ae",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5adccafb5542992c1e3a2401",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5abf82965542997719eab694",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ab5768c554299488d4d9995",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a7b96cf554299042af8f789",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5abdbe455542993f32c2a044",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ae732685542991e8301cbc3",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a78b524554299148911f954",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a83cf395542996488c2e4e0",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ab6d4cc55429954757d338b",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a78e3d2554299029c4b5eca",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a76c13555429937353601a0",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a7a121d5542990783324e2d",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a7cb4595542996dd594b99f",
+    "type": "comparison",
+    "level": "easy",
+    "question": "WHo is a Grammy winning American musician of Armenian descent, Armen Nalbandian or Arto Tunçboyacıyan?",
+    "gold_answer": "Arto Tunçboyacıyan",
+    "gold_titles": [
+      "Armen Nalbandian",
+      "Arto Tunçboyacıyan"
+    ],
+    "system_answer": "Arto Tunçboyacıyan is a Grammy-winning American musician of Armenian descent [1]. He is an avant-garde folk artist, singer, and multi-instrumentalist who has won a Grammy award [1].\n\nThe provided sources do not contain any information regarding Armen Nalbandian.",
+    "retrieved_titles": [
+      "Arto Tunçboyacıyan",
+      "Onno Tunç",
+      "Serart"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 0.5,
+    "recall_at_6": 0.5,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5ab5e4d0554299494045f0a7",
+    "type": "comparison",
+    "level": "easy",
+    "question": "Jinchang and Liling, are located in which country?",
+    "gold_answer": "China",
+    "gold_titles": [
+      "Jinchang",
+      "Liling"
+    ],
+    "system_answer": "Jinchang and Liling are both located in China [1], [2]. \n\nSpecifically:\n*   **Jinchang** is a prefecture-level city situated in Gansu province, People's Republic of China [2].\n*   **Liling** is a county-level city located in Hunan Province, China [1].",
+    "retrieved_titles": [
+      "Liling",
+      "Jinchang",
+      "Guilin"
+    ],
+    "answer_correct": true,
+    "recall_at_3": 1.0,
+    "recall_at_6": 1.0,
+    "mrr": 1.0,
+    "citation_accuracy": 1.0
+  },
+  {
+    "id": "5ae4c33a55429960a22e01c4",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5adea57f5542992fa25da7ee",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8efd3c55429918e830d179",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8d32ae5542994ba4e3dc1d",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5aba5a4d5542994dbf0198ed",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ac01bb75542996f0d89cb22",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8885b4554299206df2b2e4",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8add645542992d82986fb5",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8ce61555429941ae14df36",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5add44e85542992200553a79",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5a8a662755429930ff3c0dc5",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5abb1f745542996cc5e49fb5",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ab3ed12554299753aec59f3",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  },
+  {
+    "id": "5ab31d43554299233954ff0e",
+    "error": "502 Server Error: Bad Gateway for url: http://localhost:8000/investigate"
+  }
+]

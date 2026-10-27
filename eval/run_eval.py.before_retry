@@ -1,0 +1,107 @@
+import json
+import re
+import sys
+import time
+
+import requests
+
+API_URL = "http://localhost:8000/investigate"
+QUESTIONS_PATH = "eval/questions.json"
+RESULTS_PATH = "eval/results.json"
+
+
+def normalize(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r"[^\w\s]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def answer_correct(answer: str, gold: str) -> bool:
+    return normalize(gold) in normalize(answer)
+
+
+def citation_accuracy(answer: str, sources: list[dict], gold_titles: list[str]) -> float:
+    """პასუხში მითითებული [N] წყაროებიდან რა წილი შეიცავს სწორ supporting title-ს."""
+    cited = {int(n) for n in re.findall(r"\[(\d+)\]", answer)}
+    if not cited:
+        return 0.0
+    gold_norm = {normalize(t) for t in gold_titles}
+    by_index = {s["index"]: s for s in sources}
+    correct = 0
+    for n in cited:
+        src = by_index.get(n)
+        if src and normalize(src.get("title") or "") in gold_norm:
+            correct += 1
+    return correct / len(cited)
+
+
+def recall_at_k(sources: list[dict], gold_titles: list[str], k: int) -> float:
+    gold_norm = {normalize(t) for t in gold_titles}
+    retrieved = [normalize(s.get("title") or "") for s in sources[:k]]
+    hits = sum(1 for g in gold_norm if g in retrieved)
+    return hits / len(gold_norm) if gold_norm else 0.0
+
+
+def reciprocal_rank(sources: list[dict], gold_titles: list[str]) -> float:
+    gold_norm = {normalize(t) for t in gold_titles}
+    for rank, s in enumerate(sources, 1):
+        if normalize(s.get("title") or "") in gold_norm:
+            return 1.0 / rank
+    return 0.0
+
+
+def main():
+    questions = json.load(open(QUESTIONS_PATH, encoding="utf-8"))
+    rows = []
+
+    for i, q in enumerate(questions, 1):
+        print(f"[{i}/{len(questions)}] {q['question'][:70]}...", flush=True)
+        try:
+            r = requests.post(API_URL, json={"query": q["question"]}, timeout=120)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            print(f"  შეცდომა: {e}", flush=True)
+            rows.append({"id": q["id"], "error": str(e)})
+            time.sleep(9)
+            continue
+
+        sources = data.get("sources", [])
+        row = {
+            "id": q["id"],
+            "type": q["type"],
+            "level": q["level"],
+            "question": q["question"],
+            "gold_answer": q["answer"],
+            "gold_titles": q["supporting_titles"],
+            "system_answer": data.get("answer", ""),
+            "retrieved_titles": [s.get("title") for s in sources],
+            "answer_correct": answer_correct(data.get("answer", ""), q["answer"]),
+            "recall_at_3": recall_at_k(sources, q["supporting_titles"], 3),
+            "recall_at_6": recall_at_k(sources, q["supporting_titles"], 6),
+            "mrr": reciprocal_rank(sources, q["supporting_titles"]),
+            "citation_accuracy": citation_accuracy(data.get("answer", ""), sources, q["supporting_titles"]),
+        }
+        rows.append(row)
+        time.sleep(1)
+
+    json.dump(rows, open(RESULTS_PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+
+    ok = [r for r in rows if "error" not in r]
+    n = len(ok)
+    if n == 0:
+        print("ერთი კითხვაც არ დამუშავდა. შეამოწმეთ, გაშვებულია თუ არა სერვერი.")
+        sys.exit(1)
+
+    print("\n=== შედეგები ===")
+    print(f"დამუშავებული კითხვები: {n}/{len(rows)}")
+    print(f"Answer Correctness: {sum(r['answer_correct'] for r in ok) / n:.2%}")
+    print(f"Recall@3:           {sum(r['recall_at_3'] for r in ok) / n:.2%}")
+    print(f"Recall@6:           {sum(r['recall_at_6'] for r in ok) / n:.2%}")
+    print(f"MRR:                {sum(r['mrr'] for r in ok) / n:.3f}")
+    print(f"Citation Accuracy:  {sum(r['citation_accuracy'] for r in ok) / n:.2%}")
+    print(f"\nდეტალური შედეგი: {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
