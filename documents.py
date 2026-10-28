@@ -45,11 +45,21 @@ def ingest_document(vector_store, filename: str, content: bytes) -> dict:
 def delete_document(client, collection_name: str, document_id: str) -> None:
     from qdrant_client.http import models
 
+    clean_id = document_id.strip()
+    try:
+        client.create_payload_index(
+            collection_name=collection_name,
+            field_name="document_id",
+            field_schema=models.PayloadSchemaType.KEYWORD,
+        )
+    except Exception:
+        pass
+
     client.delete(
         collection_name=collection_name,
         points_selector=models.FilterSelector(
             filter=models.Filter(
-                must=[models.FieldCondition(key="document_id", match=models.MatchValue(value=document_id))]
+                must=[models.FieldCondition(key="document_id", match=models.MatchValue(value=clean_id))]
             )
         ),
-    )
+    ) 

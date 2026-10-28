@@ -182,5 +182,6 @@ async def upload_document(file: UploadFile = File(...)):
 
 @app.delete("/documents/{document_id}")
 def remove_document(document_id: str):
-    delete_document(qdrant, COLLECTION_NAME, document_id)
-    return {"deleted": document_id}
+    clean_id = document_id.strip()
+    delete_document(qdrant, COLLECTION_NAME, clean_id)
+    return {"deleted": clean_id}
